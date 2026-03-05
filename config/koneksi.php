@@ -5,22 +5,34 @@ $password = getenv('DB_PASSWORD') ?: '';
 $database = getenv('DB_NAME') ?: 'db_parkir_ukk';
 $port = getenv('DB_PORT') ?: '3306';
 
-$koneksi = mysqli_connect($hostname, $username, $password, $database, $port);
-
+// Initialize connection
+$koneksi = mysqli_init();
 if (!$koneksi) {
+    die("mysqli_init failed");
+}
+
+// Check if we are on serverless (Vercel)
+if (getenv('VERCEL') == '1' || getenv('DB_SSL') == 'true') {
+    // If you need SSL, some providers like Aiven require it. 
+    // Usually, you can connect with SSL without a CA file or just use the flag.
+    mysqli_real_connect($koneksi, $hostname, $username, $password, $database, $port, NULL, MYSQLI_CLIENT_SSL);
+} else {
+    mysqli_real_connect($koneksi, $hostname, $username, $password, $database, $port);
+}
+
+if (!$koneksi || mysqli_connect_errno()) {
     die("Koneksi Database Gagal: " . mysqli_connect_error());
 }
 
 // Base URL for assets and links
 function base_url($path = '') {
-    // Detect if we are on localhost or Vercel
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
+    $isLocal = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false);
     
-    // If on localhost (XAMPP), use the subdirectory, otherwise use root
-    $baseDir = (strpos($host, 'localhost') !== false) ? '/parkirsucip/' : '/';
+    // On local, we use the folder name /parkirsucip/, on production, we use the root /
+    $root = $isLocal ? '/parkirsucip/' : '/';
     
-    return $baseDir . ltrim($path, '/');
+    return $root . ltrim($path, '/');
 }
 
 // Helper to query and return array
