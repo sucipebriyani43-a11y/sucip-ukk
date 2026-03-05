@@ -1,10 +1,11 @@
 <?php
-$hostname = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'db_parkir_ukk';
+$hostname = getenv('DB_HOST') ?: 'localhost';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASSWORD') ?: '';
+$database = getenv('DB_NAME') ?: 'db_parkir_ukk';
+$port = getenv('DB_PORT') ?: '3306';
 
-$koneksi = mysqli_connect($hostname, $username, $password, $database);
+$koneksi = mysqli_connect($hostname, $username, $password, $database, $port);
 
 if (!$koneksi) {
     die("Koneksi Database Gagal: " . mysqli_connect_error());
@@ -12,7 +13,14 @@ if (!$koneksi) {
 
 // Base URL for assets and links
 function base_url($path = '') {
-    return "/parkirsucip/" . $path;
+    // Detect if we are on localhost or Vercel
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    
+    // If on localhost (XAMPP), use the subdirectory, otherwise use root
+    $baseDir = (strpos($host, 'localhost') !== false) ? '/parkirsucip/' : '/';
+    
+    return $baseDir . ltrim($path, '/');
 }
 
 // Helper to query and return array
