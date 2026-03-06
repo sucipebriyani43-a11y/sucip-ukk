@@ -36,16 +36,17 @@ if (!$koneksi) {
 mysqli_options($koneksi, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
 
 // Koneksi dengan SSL jika di Vercel (wajib untuk Aiven/PlanetScale)
+$db_port = (int)$port;
 if ($isVercel || getenv('DB_SSL') == 'true') {
-    $connected = @mysqli_real_connect($koneksi, $hostname, $username, $password, $database, $port, NULL, MYSQLI_CLIENT_SSL);
+    $connected = @mysqli_real_connect($koneksi, $hostname, $username, $password, $database, $db_port, NULL, MYSQLI_CLIENT_SSL);
 } else {
-    $connected = @mysqli_real_connect($koneksi, $hostname, $username, $password, $database, $port);
+    $connected = @mysqli_real_connect($koneksi, $hostname, $username, $password, $database, $db_port);
 }
 
 // Cek kesalahan koneksi
 if (!$connected || mysqli_connect_errno()) {
-    $err_msg = mysqli_connect_error();
-    $err_no = mysqli_connect_errno();
+    $err_msg = mysqli_connect_error() ?: mysqli_error($koneksi);
+    $err_no = mysqli_connect_errno() ?: mysqli_errno($koneksi);
     
     die("<div style='font-family:sans-serif; padding:20px; border:2px solid #cc0000; background:#fff5f5;'>
             <h3 style='color:#cc0000;'>Gagal Menyambung ke Database!</h3>
@@ -68,39 +69,51 @@ mysqli_set_charset($koneksi, "utf8mb4");
 // ---------------------------------------------------------
 
 // Base URL helper
-function base_url($path = '') {
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $isLocal = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false);
-    
-    // Sesuaikan dengan folder proyek Anda
-    $root = $isLocal ? '/parkirsucip/' : '/';
-    
-    return $root . ltrim($path, '/');
+if (!function_exists('base_url')) {
+    function base_url($path = '') {
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        // Deteksi jika akses lokal (localhost, 127.0.0.1, atau IP lokal 192.168.x.x)
+        $isLocal = (strpos($host, 'localhost') !== false || 
+                    strpos($host, '127.0.0.1') !== false || 
+                    strpos($host, '192.168.') !== false || 
+                    strpos($host, '10.') === 0);
+        
+        // Sesuaikan dengan folder proyek Anda (Ubah jika folder dipindah)
+        $root = $isLocal ? '/parkirsucip/' : '/';
+        
+        return $root . ltrim($path, '/');
+    }
 }
 
 // Query helper
-function query($query) {
-    global $koneksi;
-    $result = mysqli_query($koneksi, $query);
-    $rows = [];
-    if ($result && !is_bool($result)) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            $rows[] = $row;
+if (!function_exists('query')) {
+    function query($query) {
+        global $koneksi;
+        $result = mysqli_query($koneksi, $query);
+        $rows = [];
+        if ($result && !is_bool($result)) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $rows[] = $row;
+            }
         }
+        return $rows;
     }
-    return $rows;
 }
 
 // Sanitize input
-function sanitize($data) {
-    global $koneksi;
-    return mysqli_real_escape_string($koneksi, htmlspecialchars(trim($data ?? '')));
+if (!function_exists('sanitize')) {
+    function sanitize($data) {
+        global $koneksi;
+        return mysqli_real_escape_string($koneksi, htmlspecialchars(trim($data ?? '')));
+    }
 }
 
 // Redirect helper
-function redirect($url) {
-    echo "<script>window.location.href='" . base_url($url) . "';</script>";
-    exit;
+if (!function_exists('redirect')) {
+    function redirect($url) {
+        echo "<script>window.location.href='" . base_url($url) . "';</script>";
+        exit;
+    }
 }
 
 // Session & Flash Message
@@ -108,26 +121,31 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-function set_flash($message, $type = 'success') {
-    $_SESSION['flash'] = ['message' => $message, 'type' => $type];
+if (!function_exists('set_flash')) {
+    function set_flash($message, $type = 'success') {
+        $_SESSION['flash'] = ['message' => $message, 'type' => $type];
+    }
 }
 
-function get_flash() {
-    if (isset($_SESSION['flash'])) {
-        $flash = $_SESSION['flash'];
-        unset($_SESSION['flash']);
-        return '<div class="alert alert-' . $flash['type'] . ' alert-dismissible fade show" role="alert">
-                    ' . $flash['message'] . '
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>';
+if (!function_exists('get_flash')) {
+    function get_flash() {
+        if (isset($_SESSION['flash'])) {
+            $flash = $_SESSION['flash'];
+            unset($_SESSION['flash']);
+            return '<div class="alert alert-' . $flash['type'] . ' alert-dismissible fade show" role="alert">
+                        ' . $flash['message'] . '
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>';
+        }
+        return '';
     }
-    return '';
 }
 
 // Middleware sederhana
-function check_role($role) {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != $role) {
-        redirect('auth/login.php');
+if (!function_exists('check_role')) {
+    function check_role($role) {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != $role) {
+            redirect('auth/login.php');
+        }
     }
 }
-?>
