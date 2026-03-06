@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Vercel PHP Router - Fixed Version
  * Memfungsikan file PHP di luar folder api/ agar tetap bisa dijalankan di Vercel.
@@ -37,3 +37,4 @@ if (file_exists($rootDoc) && is_file($rootDoc) && pathinfo($rootDoc, PATHINFO_EX
         echo "404 Not Found: " . htmlspecialchars($path);
     }
 }
+
