@@ -1,6 +1,6 @@
 <?php
 /**
- * Vercel PHP Router
+ * Vercel PHP Router - Fixed Version
  * Memfungsikan file PHP di luar folder api/ agar tetap bisa dijalankan di Vercel.
  */
 
@@ -22,7 +22,7 @@ if (strpos($path, '/api/') === 0) {
 $rootDoc = dirname(__DIR__) . $path;
 
 // Cek jika file PHP tersebut ada
-if (file_exists($rootDoc) && is_file($rootDoc) && pathinfo($rootDoc, PHP_INFO_EXTENSION) === 'php') {
+if (file_exists($rootDoc) && is_file($rootDoc) && pathinfo($rootDoc, PATHINFO_EXTENSION) === 'php') {
     // Jalankan file tersebut
     require_once $rootDoc;
 } else if (file_exists($rootDoc) && is_file($rootDoc)) {
