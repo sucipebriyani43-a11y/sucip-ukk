@@ -1,6 +1,7 @@
 {
+  "version": 2,
   "functions": {
-    "**/*.php": {
+    "api/index.php": {
       "runtime": "vercel-php@0.7.2"
     }
   },
@@ -10,20 +11,20 @@
       "dest": "/assets/$1"
     },
     {
-      "src": "/(.*).sql",
-      "status": 403
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
     },
     {
       "src": "/config/(.*)",
       "status": 403
     },
     {
-      "src": "/(.*).php",
-      "dest": "/$1.php"
+      "src": "/(.*).sql",
+      "status": 403
     },
     {
-      "src": "/",
-      "dest": "/index.php"
+      "src": "/(.*)",
+      "dest": "/api/index.php"
     }
   ]
 }
