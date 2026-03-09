@@ -1,6 +1,5 @@
 <?php
 require_once '../config/koneksi.php';
-session_start();
 check_role('petugas'); // Protect Petugas Area
 
 $user_active = $_SESSION['user'];
