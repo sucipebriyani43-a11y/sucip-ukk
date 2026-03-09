@@ -1,5 +1,5 @@
 <?php
-require_once '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 check_role('owner'); // Protect Owner Area
 
 $user_active = $_SESSION['user'];

@@ -1,6 +1,5 @@
 <?php
-session_start();
-require_once '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 
 if (isset($_SESSION['user'])) {
     if ($_SESSION['user']['role'] == 'admin') redirect('admin/dashboard.php');

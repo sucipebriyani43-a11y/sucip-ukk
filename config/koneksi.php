@@ -2,10 +2,30 @@
 // Report mode off for custom error handling
 mysqli_report(MYSQLI_REPORT_OFF);
 
+// Helper untuk meload file .env secara manual (untuk environment lokal XAMPP)
+function load_env($path) {
+    if (!file_exists($path)) return;
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value, " \"'");
+            putenv("$name=$value");
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
+        }
+    }
+}
+
+// Load .env jika ada di root project
+load_env(__DIR__ . '/../.env');
+
 // Ambil variabel environment (Prioritas: Vercel/Environment Variables)
 $hostname = getenv('DB_HOST') ?: 'localhost';
 $username = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASSWORD') ?: '';
+$password = getenv('DB_PASS') ?: getenv('DB_PASSWORD') ?: '';
 $database = getenv('DB_NAME') ?: 'db_parkir_ukk';
 $port = getenv('DB_PORT') ?: '3306';
 
@@ -48,9 +68,16 @@ if (!$connected || mysqli_connect_errno()) {
     $err_msg = mysqli_connect_error() ?: mysqli_error($koneksi);
     $err_no = mysqli_connect_errno() ?: mysqli_errno($koneksi);
     
+    // Cek jika password kosong padahal hostnya bukan localhost
+    $pass_warning = "";
+    if ($hostname !== 'localhost' && $hostname !== '127.0.0.1' && empty($password)) {
+        $pass_warning = "<p style='color:orange;'>⚠️ <b>Peringatan:</b> Anda mencoba menyambung ke host remote ($hostname) tanpa password. Biasanya database online (seperti Aiven) mewajibkan password.</p>";
+    }
+    
     die("<div style='font-family:sans-serif; padding:20px; border:2px solid #cc0000; background:#fff5f5;'>
             <h3 style='color:#cc0000;'>Gagal Menyambung ke Database!</h3>
             <p>Pesan Error: <b>$err_msg</b> (Kode: $err_no)</p>
+            $pass_warning
             <hr>
             <p><b>Tips Perbaikan:</b></p>
             <ul>
