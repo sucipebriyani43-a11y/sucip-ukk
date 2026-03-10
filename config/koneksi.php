@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Report mode off for custom error handling
 mysqli_report(MYSQLI_REPORT_OFF);
 
@@ -143,10 +147,6 @@ if (!function_exists('redirect')) {
     }
 }
 
-// Session & Flash Message
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 if (!function_exists('set_flash')) {
     function set_flash($message, $type = 'success') {

@@ -1,6 +1,5 @@
 <?php
 require_once '../config/koneksi.php';
-session_start();
 check_role('petugas');
 
 if (!isset($_GET['id'])) {
