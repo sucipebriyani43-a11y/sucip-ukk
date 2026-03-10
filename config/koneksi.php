@@ -1,4 +1,7 @@
 <?php
+if (ob_get_level() === 0) {
+    ob_start();
+}
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -142,7 +145,11 @@ if (!function_exists('sanitize')) {
 // Redirect helper
 if (!function_exists('redirect')) {
     function redirect($url) {
-        echo "<script>window.location.href='" . base_url($url) . "';</script>";
+        if (!headers_sent()) {
+            header("Location: " . base_url($url));
+        } else {
+            echo "<script>window.location.href='" . base_url($url) . "';</script>";
+        }
         exit;
     }
 }
