@@ -1,4 +1,5 @@
 ﻿<?php
+if (ob_get_level() === 0) ob_start();
 /**
  * Vercel PHP Router - Fixed Version
  * Memfungsikan file PHP di luar folder api/ agar tetap bisa dijalankan di Vercel.
